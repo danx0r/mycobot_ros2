@@ -1,6 +1,6 @@
 # ROS2 Build Dependencies
 # These are required for colcon build to work properly
-empy                    # Required for rosidl message generation (the 'em' module)
+empy==3.3.4             # Required for rosidl message generation (must be 3.3.4 for ROS2 Humble)
 lark                    # Parser used by ROS2 IDL processing
 catkin_pkg              # ROS package manifest parsing
 colcon-common-extensions # Colcon build tools
