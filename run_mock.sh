@@ -1,0 +1,1 @@
+Bash(source /opt/ros/humble/setup.bash && source /home/dbm/mycobot_ros2/install/setup.bash && ros2 launch mycobot_280_moveit2 demo.launch.py 2>&1) timeout: 30s                                                                             
