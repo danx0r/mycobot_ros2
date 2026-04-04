@@ -1,0 +1,14 @@
+# ROS2 Build Dependencies
+# These are required for colcon build to work properly
+empy                    # Required for rosidl message generation (the 'em' module)
+lark                    # Parser used by ROS2 IDL processing
+catkin_pkg              # ROS package manifest parsing
+colcon-common-extensions # Colcon build tools
+
+# Project Runtime Dependencies
+pymycobot               # Elephant Robotics myCobot Python SDK
+packaging               # Version parsing utilities
+opencv-python           # Computer vision (cv2) - optional, for camera features
+
+# Testing
+pytest
