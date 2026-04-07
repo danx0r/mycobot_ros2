@@ -62,7 +62,7 @@ def generate_launch_description():
             ])
         ),
         launch_arguments={
-            'gz_args': [world_file, ' -r'],
+            'gz_args': [world_file, ' -r --physics-engine ignition-physics-bullet-plugin'],
         }.items(),
     )
 
