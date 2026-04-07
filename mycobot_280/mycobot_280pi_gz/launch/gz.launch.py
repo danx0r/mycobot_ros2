@@ -11,18 +11,18 @@ Starts:
 """
 
 import os
-from ament_index_python.packages import get_package_share_directory
+from ament_index_python.packages import get_package_share_directory, get_package_prefix
 from launch import LaunchDescription
 from launch.actions import (
     DeclareLaunchArgument,
-    ExecuteProcess,
     IncludeLaunchDescription,
     RegisterEventHandler,
+    SetEnvironmentVariable,
     TimerAction,
 )
 from launch.event_handlers import OnProcessExit
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
+from launch.substitutions import PathJoinSubstitution
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
 import xacro
@@ -30,6 +30,12 @@ import xacro
 
 def generate_launch_description():
     pkg_gz = get_package_share_directory('mycobot_280pi_gz')
+
+    # Set IGN_GAZEBO_RESOURCE_PATH so Ignition can resolve package:// mesh URIs
+    ign_resource_path = SetEnvironmentVariable(
+        name='IGN_GAZEBO_RESOURCE_PATH',
+        value=os.path.join(get_package_prefix('mycobot_description'), 'share'),
+    )
 
     # --- Arguments ---
     gz_paused_arg = DeclareLaunchArgument(
@@ -66,16 +72,19 @@ def generate_launch_description():
         }.items(),
     )
 
-    # --- Spawn robot from robot_description topic ---
-    spawn_robot = Node(
-        package='ros_gz_sim',
-        executable='create',
-        arguments=[
-            '-name', 'mycobot_280_pi',
-            '-topic', 'robot_description',
-            '-z', '0.03',
-        ],
-        output='screen',
+    # --- Spawn robot from robot_description topic (delayed to let Gazebo start) ---
+    spawn_robot = TimerAction(
+        period=3.0,
+        actions=[Node(
+            package='ros_gz_sim',
+            executable='create',
+            arguments=[
+                '-name', 'mycobot_280_pi',
+                '-topic', 'robot_description',
+                '-z', '0.03',
+            ],
+            output='screen',
+        )],
     )
 
     # --- Clock bridge (Ignition -> ROS2) ---
@@ -86,7 +95,7 @@ def generate_launch_description():
         output='screen',
     )
 
-    # --- Spawn controllers after robot is created ---
+    # --- Spawn controllers ---
     joint_state_broadcaster_spawner = Node(
         package='controller_manager',
         executable='spawner',
@@ -99,7 +108,6 @@ def generate_launch_description():
         arguments=['arm_group_controller', '--controller-manager', '/controller_manager'],
     )
 
-    # Start arm controller after joint_state_broadcaster is active
     start_arm_controller = RegisterEventHandler(
         event_handler=OnProcessExit(
             target_action=joint_state_broadcaster_spawner,
@@ -107,10 +115,11 @@ def generate_launch_description():
         )
     )
 
-    # Delay controller spawning to give Gazebo time to load the plugin
-    delayed_jsb = TimerAction(period=5.0, actions=[joint_state_broadcaster_spawner])
+    # Delay controllers to give Gazebo + plugin time to load
+    delayed_jsb = TimerAction(period=8.0, actions=[joint_state_broadcaster_spawner])
 
     return LaunchDescription([
+        ign_resource_path,
         gz_paused_arg,
         gz_gui_arg,
         rsp_node,
