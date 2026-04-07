@@ -62,7 +62,7 @@ def generate_launch_description():
             ])
         ),
         launch_arguments={
-            'gz_args': [world_file, ' -r --physics-engine ignition-physics-bullet-plugin'],
+            'gz_args': [world_file, ' -r --physics-engine ignition-physics-dartsim-plugin'],
         }.items(),
     )
 
